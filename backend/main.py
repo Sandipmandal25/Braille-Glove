@@ -46,7 +46,11 @@ async def main() -> None:
 
     session_mgr = SessionManager(device, queue_mgr, messaging, fav_repo, factory)
 
-    messaging.set_incoming_handler(queue_mgr.enqueue_from_external)
+    async def handle_incoming(incoming):
+        await queue_mgr.enqueue_from_external(incoming)
+        await session_mgr.on_new_message()
+
+    messaging.set_incoming_handler(handle_incoming)
     device.register_button_callback(session_mgr.handle_button_event)
     device.register_connect_callback(session_mgr.on_device_connected)
     device.register_disconnect_callback(session_mgr.on_device_disconnected)
@@ -56,7 +60,8 @@ async def main() -> None:
     try:
         await device.connect()
     except Exception as exc:
-        log.warning("Initial BLE connect failed (%s) — will retry when glove turns on", exc)
+        log.warning("Initial BLE connect failed (%s) — retrying in background …", exc)
+        asyncio.create_task(device._reconnect_loop())
 
     app = build_fastapi_app(device, session_mgr, queue_mgr, factory, msg_repo, fav_repo)
 

@@ -55,7 +55,7 @@ class BLEManager:
     async def send_haptic(self, dot_mask: int, duration_ms: int) -> None:
         if self._client and self._client.is_connected:
             data = encode_haptic_packet(dot_mask, duration_ms)
-            await self._client.write_gatt_char(HAPTIC_OUTPUT_CHAR_UUID, data, response=False)
+            await self._client.write_gatt_char(HAPTIC_OUTPUT_CHAR_UUID, data, response=True)
 
     async def disconnect(self) -> None:
         if self._client:

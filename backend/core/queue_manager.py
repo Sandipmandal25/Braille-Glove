@@ -50,6 +50,12 @@ class QueueManager:
         self._cursor = 0
         return await self.current_message()
 
+    async def jump_to_latest(self) -> Message | None:
+        if not self._queue:
+            return None
+        self._cursor = len(self._queue) - 1
+        return await self.current_message()
+
     async def mark_current_read(self) -> None:
         msg = await self.current_message()
         if msg is None:

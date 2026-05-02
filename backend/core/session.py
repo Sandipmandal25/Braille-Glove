@@ -75,6 +75,19 @@ class SessionManager:
         if msg:
             await self._play_message(msg)
 
+    async def on_new_message(self) -> None:
+        """Auto-play a newly arrived message if in READ mode and glove is connected."""
+        if self._mode != GloveMode.READ:
+            log.info("New message ignored — not in READ mode")
+            return
+        if not self._device.is_connected:
+            log.info("New message ignored — glove not connected")
+            return
+        msg = await self._queue.jump_to_latest()
+        if msg:
+            log.info("Auto-playing new message: %r", msg.text)
+            await self._play_message(msg)
+
     async def on_device_disconnected(self) -> None:
         self._mode    = GloveMode.READ
         self._compose = ComposeState()
